@@ -9,7 +9,7 @@
     errors: [],
     promiseRejections: [],
     visibility: 'visible',
-    page_url:window.location.href // Initial page URL
+    page_url: window.location.href // Initial page URL
   };
 
   // Start time on page
@@ -17,7 +17,7 @@
 
   // Function to send data to the backend
   const sendTrackingData = (type, data) => {
-    console.log(trackingData,"trackingData");
+    console.log(trackingData, "trackingData");
     // fetch('https://your-backend-url.com/track', {
     //   method: 'POST',
     //   headers: { 'Content-Type': 'application/json' },
@@ -128,15 +128,16 @@
     }
   };
 
-  // 11. page url
-  const getPageUrl=()=>{
-    let page_url=window.location.href
-    trackingData.page_url= page_url;
-    sendTrackingData("page_url",page_url);
-  }
+  // 11. Page URL Tracking
+  const updatePageUrl = () => {
+    let page_url = window.location.href;
+    trackingData.page_url = page_url;
+    sendTrackingData("page_url", page_url);
+  };
 
   // Add event listeners
-  // window.addEventListener("beforeunload", trackTimeOnPage);
+  window.addEventListener("load", updatePageUrl); // Track initial load
+  window.addEventListener("popstate", updatePageUrl); // Track changes in SPA navigation
   window.addEventListener("scroll", handleScroll);
   document.addEventListener("click", handleClick);
   document.addEventListener("mouseleave", handleMouseLeave);
@@ -150,7 +151,8 @@
 
   // Cleanup event listeners
   return () => {
-    // window.removeEventListener("beforeunload", trackTimeOnPage);
+    window.removeEventListener("load", updatePageUrl);
+    window.removeEventListener("popstate", updatePageUrl);
     window.removeEventListener("scroll", handleScroll);
     document.removeEventListener("click", handleClick);
     document.removeEventListener("mouseleave", handleMouseLeave);
