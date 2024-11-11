@@ -17,7 +17,7 @@
 
   // Function to send data to the backend
   const sendTrackingData = (type, data) => {
-    // console.log(trackingData,"trackingData");
+    console.log(trackingData,"trackingData");
     // fetch('https://your-backend-url.com/track', {
     //   method: 'POST',
     //   headers: { 'Content-Type': 'application/json' },
