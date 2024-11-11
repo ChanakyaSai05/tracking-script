@@ -9,7 +9,7 @@
     errors: [],
     promiseRejections: [],
     visibility: 'visible',
-    page_url:""
+    page_url:window.location.href // Initial page URL
   };
 
   // Start time on page
@@ -147,7 +147,6 @@
   window.addEventListener("scroll", handleScrollDirection);
   document.addEventListener("visibilitychange", handleVisibilityChange);
   window.addEventListener("scroll", handleScrollEnd);
-  window.addEventListener("onload", getPageUrl);
 
   // Cleanup event listeners
   return () => {
@@ -162,6 +161,5 @@
     window.removeEventListener("scroll", handleScrollDirection);
     document.removeEventListener("visibilitychange", handleVisibilityChange);
     window.removeEventListener("scroll", handleScrollEnd);
-    window.addEventListener("onload", getPageUrl);
   };
 })();
