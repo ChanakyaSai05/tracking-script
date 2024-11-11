@@ -9,6 +9,7 @@
     errors: [],
     promiseRejections: [],
     visibility: 'visible',
+    page_url:""
   };
 
   // Start time on page
@@ -127,6 +128,13 @@
     }
   };
 
+  // 11. page url
+  const getPageUrl=()=>{
+    let page_url=window.location.href
+    trackingData.page_url= page_url;
+    sendTrackingData("page_url",page_url);
+  }
+
   // Add event listeners
   // window.addEventListener("beforeunload", trackTimeOnPage);
   window.addEventListener("scroll", handleScroll);
@@ -139,6 +147,7 @@
   window.addEventListener("scroll", handleScrollDirection);
   document.addEventListener("visibilitychange", handleVisibilityChange);
   window.addEventListener("scroll", handleScrollEnd);
+  window.addEventListener("onload", getPageUrl);
 
   // Cleanup event listeners
   return () => {
@@ -153,5 +162,6 @@
     window.removeEventListener("scroll", handleScrollDirection);
     document.removeEventListener("visibilitychange", handleVisibilityChange);
     window.removeEventListener("scroll", handleScrollEnd);
+    window.addEventListener("onload", getPageUrl);
   };
 })();
