@@ -16,7 +16,7 @@
 
   // Function to send data to the backend
   const sendTrackingData = (type, data) => {
-    console.log(trackingData,"trackingData");
+    // console.log(trackingData,"trackingData");
     // fetch('https://your-backend-url.com/track', {
     //   method: 'POST',
     //   headers: { 'Content-Type': 'application/json' },
@@ -128,7 +128,7 @@
   };
 
   // Add event listeners
-  window.addEventListener("beforeunload", trackTimeOnPage);
+  // window.addEventListener("beforeunload", trackTimeOnPage);
   window.addEventListener("scroll", handleScroll);
   document.addEventListener("click", handleClick);
   document.addEventListener("mouseleave", handleMouseLeave);
@@ -142,7 +142,7 @@
 
   // Cleanup event listeners
   return () => {
-    window.removeEventListener("beforeunload", trackTimeOnPage);
+    // window.removeEventListener("beforeunload", trackTimeOnPage);
     window.removeEventListener("scroll", handleScroll);
     document.removeEventListener("click", handleClick);
     document.removeEventListener("mouseleave", handleMouseLeave);
