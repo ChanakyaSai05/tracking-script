@@ -1,13 +1,13 @@
 (function () {
   const trackingData = {
     scrollDepth: 0,
-    clicks: [],
-    scrollDirection: "",
-    timeOnPage: 0,
-    idleTime: 0,
-    errors: [],
-    promiseRejections: [],
-    visibility: "visible",
+    // clicks: [],
+    // scrollDirection: "",
+    // timeOnPage: 0,
+    // idleTime: 0,
+    // errors: [],
+    // promiseRejections: [],
+    // visibility: "visible",
     page_url: window.location.href,
     userIP: "", // To be populated
   };
@@ -27,7 +27,7 @@
   };
 
   const sendTrackingData = (type, data) => {
-    console.log(`Tracking ${type}:`, data, trackingData);
+    console.log(`Tracking ${type}:`, trackingData);
     trackingBuffer.push({ type, data, timestamp: new Date() });
     if (trackingBuffer.length >= 10) {
       // Adjust batching threshold
@@ -131,6 +131,7 @@
   const initializeTracking = () => {
     getUserIP();
 
+    window.addEventListener("load", updatePageUrl);
     window.addEventListener("scroll", handleScroll);
     window.addEventListener("scroll", handleScrollDirection);
     window.addEventListener("scroll", handleScrollEnd);
