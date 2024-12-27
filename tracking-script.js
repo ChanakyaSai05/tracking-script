@@ -114,7 +114,8 @@
 
   const updatePageUrl = () => {
     trackingData.page_url = window.location.href;
-    sendTrackingData("page_url", trackingData.page_url);
+    console.log("page url", window.location.href);
+    sendTrackingData("page_url", window.location.href);
   };
 
   const getUserIP = () => {
