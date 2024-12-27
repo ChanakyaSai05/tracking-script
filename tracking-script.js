@@ -113,9 +113,12 @@
   };
 
   const updatePageUrl = () => {
-    trackingData.page_url = window.location.href;
-    console.log("page url", window.location.href);
-    sendTrackingData("page_url", window.location.href);
+    // Add small delay to ensure URL has updated
+    setTimeout(() => {
+      trackingData.page_url = window.location.href;
+      console.log("page url", window.location.href);
+      sendTrackingData("page_url", window.location.href);
+    }, 50);
   };
 
   const getUserIP = () => {
@@ -160,6 +163,18 @@
       originalReplaceState.apply(this, args);
       updatePageUrl();
     };
+
+    // Add URL change detection via mutation observer
+    const urlObserver = new MutationObserver(() => {
+      if (trackingData.page_url !== window.location.href) {
+        updatePageUrl();
+      }
+    });
+
+    urlObserver.observe(document.querySelector("body"), {
+      childList: true,
+      subtree: true,
+    });
   };
 
   initializeTracking();
