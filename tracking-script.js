@@ -16,18 +16,18 @@
   let trackingBuffer = [];
 
   const flushTrackingData = () => {
-    if (trackingBuffer.length > 0) {
-      fetch("https://your-backend-url.com/track", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(trackingBuffer),
-      }).catch((err) => console.error("Failed to send tracking data:", err));
-      trackingBuffer = [];
-    }
+    // if (trackingBuffer.length > 0) {
+    //   fetch("https://your-backend-url.com/track", {
+    //     method: "POST",
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify(trackingBuffer),
+    //   }).catch((err) => console.error("Failed to send tracking data:", err));
+    //   trackingBuffer = [];
+    // }
   };
 
   const sendTrackingData = (type, data) => {
-    console.log(`Tracking ${type}:`, data);
+    console.log(`Tracking ${type}:`, data, trackingData);
     trackingBuffer.push({ type, data, timestamp: new Date() });
     if (trackingBuffer.length >= 10) {
       // Adjust batching threshold
