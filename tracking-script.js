@@ -147,6 +147,19 @@
 
     // For SPAs, track route changes
     window.addEventListener("popstate", updatePageUrl);
+    window.addEventListener("hashchange", updatePageUrl);
+
+    const originalPushState = history.pushState;
+    history.pushState = function (...args) {
+      originalPushState.apply(this, args);
+      updatePageUrl();
+    };
+
+    const originalReplaceState = history.replaceState;
+    history.replaceState = function (...args) {
+      originalReplaceState.apply(this, args);
+      updatePageUrl();
+    };
   };
 
   initializeTracking();
