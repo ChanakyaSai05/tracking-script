@@ -150,9 +150,7 @@
 
   // Send data when the page loads
   const handlePageLoad = () => {
-    setTimeout(() => {
-      sendTrackingData("page_load", { page_url: trackingData.page_url });
-    }, 100);
+    sendTrackingData("pageLoad", { page_url: trackingData.page_url });
   };
 
   // Handle exit intent
@@ -170,7 +168,7 @@
       if (trackingData.page_url !== window.location.href) {
         trackingData.page_url = window.location.href;
         trackingData.scrollDepth = 0;
-        sendTrackingData("page_load", { page_url: trackingData.page_url });
+        sendTrackingData("page_load", window.location.href);
       }
     }, 50);
   };
