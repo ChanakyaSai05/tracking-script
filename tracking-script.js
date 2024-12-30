@@ -21,14 +21,58 @@
     console.error("Tracking ID is missing in the script URL");
   }
 
+  function generateSessionId() {
+    return "xxxxxx-xxxx-4xxx-yxxx-xxxxxx".replace(/[xy]/g, (c) => {
+      const r = (Math.random() * 16) | 0;
+      const v = c === "x" ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+  }
+
+  function setCookie(name, value, days) {
+    try {
+      const expirationDate = new Date();
+      expirationDate.setDate(expirationDate.getDate() + days);
+      const cookie = `${name}=${encodeURIComponent(
+        value
+      )};expires=${expirationDate.toUTCString()};path=/;SameSite=Strict;Secure`;
+      document.cookie = cookie;
+      return true;
+    } catch (error) {
+      console.error("Error setting cookie:", error);
+      return false;
+    }
+  }
+
+  function getCookie(name) {
+    try {
+      const cookies = document.cookie.split(";");
+      for (let cookie of cookies) {
+        const [cookieName, cookieValue] = cookie.trim().split("=");
+        if (cookieName.trim() === name) {
+          return cookieValue ? decodeURIComponent(cookieValue) : null;
+        }
+      }
+      return null;
+    } catch (error) {
+      console.error("Error getting cookie:", error);
+      return null;
+    }
+  }
+
   // Function to send data to the backend
   const sendTrackingData = async (type, data) => {
     if (!data) return;
-    // const payload = {
-    //   type,
-    //   data,
-    //   timestamp: new Date().toISOString(),
-    // };
+    // In your tracking code:
+    let sessionId = getCookie("tracking_session_id");
+
+    if (!sessionId) {
+      sessionId = generateSessionId();
+      const cookieSet = setCookie("tracking_session_id", sessionId, 1);
+      if (!cookieSet) {
+        console.error("Failed to set session cookie");
+      }
+    }
     console.log("data", data, type, trackingData);
     let payload = {};
     if (type === "scroll_depth") {
@@ -37,6 +81,7 @@
         page_url: trackingData?.page_url || window.location.href,
         type: "scroll_depth",
         script_id: trackingId,
+        session_id: sessionId || null,
       };
     } else
       payload = {
@@ -45,6 +90,7 @@
           data?.page_url || trackingData?.page_url || window.location.href,
         type: "page_load",
         script_id: trackingId,
+        session_id: sessionId || null,
       };
     console.log("payload", payload);
     try {
