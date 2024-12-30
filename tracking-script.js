@@ -101,14 +101,6 @@
       }else{
         return;
       }
-    }else if(type==="exitIntentUnload"){
-      payload = {
-        scroll_depth: trackingData?.scrollDepth?.toFixed(2) || 0,
-        page_url: trackingData?.page_url || window.location.href,
-        type: "page_url",
-        script_id: trackingId,
-        session_id: sessionId,
-      };
     }else{
       payload = {
         scroll_depth: trackingData?.scrollDepth?.toFixed(2) || 0,
@@ -158,7 +150,7 @@
 
   // Send data when the page loads
   const handlePageLoad = () => {
-    sendTrackingData("pageLoad", { page_url: trackingData.page_url });
+    // sendTrackingData("pageLoad", { page_url: trackingData.page_url });
   };
 
   // Handle exit intent
@@ -175,7 +167,8 @@
     setTimeout(() => {
       if (trackingData.page_url !== window.location.href) {
         trackingData.page_url = window.location.href;
-        sendTrackingData("page_url", window.location.href);
+        trackingData.scrollDepth = 0;
+        sendTrackingData("page_load", window.location.href);
       }
     }, 50);
   };
@@ -185,9 +178,9 @@
     window.addEventListener("load", handlePageLoad);
     window.addEventListener("scroll", handleScroll);
     document.addEventListener("mouseleave", handleMouseLeave);
-    window.addEventListener("beforeunload", () => {
-      sendTrackingData("exitIntentUnload", { message: "Page unload" });
-    });
+    // window.addEventListener("beforeunload", () => {
+    //   sendTrackingData("exitIntentUnload", { message: "Page unload" });
+    // });
 
     // Monitor URL changes for SPAs
     const urlObserver = new MutationObserver(() => {
