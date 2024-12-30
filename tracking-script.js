@@ -1,56 +1,44 @@
 (function () {
   const trackingData = {
-    scrollDepth: 0,
+    scroll_depth: 0,
     page_url: window.location.href,
   };
 
-  const startTime = Date.now();
+  let isScrolling = false;
   let trackingBuffer = [];
-  let debounceTimer;
-  let batchTimeout;
-  const BATCH_SIZE = 10;
-  const BATCH_TIMEOUT = 5000;
-  const MAX_RETRIES = 3;
 
-  const debounce = (func, wait) => {
-    let timeout;
+  const debounce = (func, delay) => {
+    let timer;
     return (...args) => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => func.apply(this, args), wait);
+      clearTimeout(timer);
+      timer = setTimeout(() => func.apply(this, args), delay);
     };
   };
 
   const flushTrackingData = () => {
-    // if (trackingBuffer.length > 0) {
-    //   fetch("https://your-backend-url.com/track", {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify(trackingBuffer),
-    //   }).catch((err) => console.error("Failed to send tracking data:", err));
-    //   trackingBuffer = [];
-    // }
+    if (trackingBuffer.length > 0) {
+      navigator.sendBeacon("https://be-agent.dev-vison.infiniticube.in/analytics/data", JSON.stringify(trackingBuffer));
+      trackingBuffer = [];
+    }
   };
 
   const sendTrackingData = (type, data) => {
-    console.log(`Tracking ${type}:`, trackingData);
-    console.log("Type")
     trackingBuffer.push({ type, data, timestamp: new Date() });
     if (trackingBuffer.length >= 10) {
       flushTrackingData();
     }
   };
 
-  const handleScroll = () => {
+  const handleScroll = debounce(() => {
     const scrollTop = window.scrollY;
-    const docHeight =
-      document.documentElement.scrollHeight - window.innerHeight;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
     const scrollPercentage = (scrollTop / docHeight) * 100;
 
-    if (scrollPercentage > trackingData.scrollDepth) {
-      trackingData.scrollDepth = scrollPercentage;
-      sendTrackingData("scrollDepth", scrollPercentage);
+    if (scrollPercentage > trackingData.scroll_depth) {
+      trackingData.scroll_depth = scrollPercentage;
+      sendTrackingData("scroll_depth", scrollPercentage);
     }
-  };
+  }, 1000);
 
   const handleMouseLeave = (e) => {
     if (e.clientY < 10) {
@@ -61,26 +49,34 @@
   };
 
   const updatePageUrl = () => {
-    // Add small delay to ensure URL has updated
     setTimeout(() => {
-      trackingData.page_url = window.location.href;
-      console.log("page url", window.location.href);
-      sendTrackingData("page_url", window.location.href);
+      if (trackingData.page_url !== window.location.href) {
+        trackingData.page_url = window.location.href;
+        sendTrackingData("page_url", window.location.href);
+      }
     }, 50);
   };
 
-  // Initialize script
   const initializeTracking = () => {
-    window.addEventListener("load", updatePageUrl);
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("load", () => {
+      sendTrackingData("pageLoad", { page_url: trackingData.page_url });
+    });
+
+    window.addEventListener("scroll", () => {
+      isScrolling = true;
+      handleScroll();
+    });
+
     document.addEventListener("mouseleave", handleMouseLeave);
     window.addEventListener("beforeunload", flushTrackingData);
-
-    // Add URL change detection via mutation observer
-    const urlObserver = new MutationObserver(() => {
-      if (trackingData.page_url !== window.location.href) {
-        updatePageUrl();
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") {
+        flushTrackingData();
       }
+    });
+
+    const urlObserver = new MutationObserver(() => {
+      updatePageUrl();
     });
 
     urlObserver.observe(document.querySelector("body"), {
