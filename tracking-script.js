@@ -57,7 +57,7 @@
 
     if (scrollPercentage > lastScrollDepth) {
       lastScrollDepth = scrollPercentage;
-      trackingData.scrollDepth = scrollPercentage;
+      trackingData.scrollDepth = scrollPercentage.toFixed(2);
       sendTrackingData("scroll_depth", scrollPercentage.toFixed(2));
     }
   }, 500); // 500ms debounce delay
@@ -90,10 +90,10 @@
   const initializeTracking = () => {
     window.addEventListener("load", handlePageLoad);
     window.addEventListener("scroll", handleScroll);
-    document.addEventListener("mouseleave", handleMouseLeave);
-    window.addEventListener("beforeunload", () => {
-      sendTrackingData("exitIntent", { message: "Page unload" });
-    });
+    // document.addEventListener("mouseleave", handleMouseLeave);
+    // window.addEventListener("beforeunload", () => {
+    //   sendTrackingData("exitIntent", { message: "Page unload" });
+    // });
 
     // Monitor URL changes for SPAs
     const urlObserver = new MutationObserver(() => {
