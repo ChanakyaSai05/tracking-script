@@ -11,7 +11,7 @@
     //   data,
     //   timestamp: new Date().toISOString(),
     // };
-    console.log("data", data);
+    console.log("data", data, trackingData);
     try {
       await fetch("https://be-agent.dev-vison.infiniticube.in/analytics/data", {
         method: "POST",
