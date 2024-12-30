@@ -3,6 +3,23 @@
     scrollDepth: 0,
     page_url: window.location.href,
   };
+  // Function to extract query parameters from the script URL
+  const getScriptParam = (param) => {
+    const scriptTags = document.getElementsByTagName("script");
+    for (let script of scriptTags) {
+      if (script.src.includes("tracking-script.js")) {
+        const urlParams = new URLSearchParams(script.src.split("?")[1]);
+        return urlParams.get(param);
+      }
+    }
+    return null;
+  };
+
+  // Extract the ID parameter
+  const trackingId = getScriptParam("id");
+  if (!trackingId) {
+    console.error("Tracking ID is missing in the script URL");
+  }
 
   // Function to send data to the backend
   const sendTrackingData = async (type, data) => {
@@ -12,19 +29,22 @@
     //   data,
     //   timestamp: new Date().toISOString(),
     // };
-    console.log("data", data,type, trackingData);
+    console.log("data", data, type, trackingData);
     let payload = {};
     if (type === "scroll_depth") {
       payload = {
         scroll_depth: data || trackingData?.scrollDepth || 0,
         page_url: trackingData?.page_url || window.location.href,
         type: "scroll_depth",
+        script_id: trackingId,
       };
     } else
       payload = {
-        page_url: data?.page_url || trackingData?.page_url || window.location.href,
-        type: "page_url",
         scroll_depth: trackingData?.scrollDepth || 0,
+        page_url:
+          data?.page_url || trackingData?.page_url || window.location.href,
+        type: "page_load",
+        script_id: trackingId,
       };
     console.log("payload", payload);
     try {
