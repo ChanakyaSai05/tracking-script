@@ -101,6 +101,14 @@
       } else {
         return;
       }
+    } else if (type === "exitIntentUnload") {
+      payload = {
+        scroll_depth: trackingData?.scrollDepth?.toFixed(2) || 0,
+        page_url: trackingData?.page_url,
+        type: "page_url",
+        script_id: trackingId,
+        session_id: sessionId,
+      };
     } else {
       payload = {
         scroll_depth: trackingData?.scrollDepth?.toFixed(2) || 0,
@@ -166,9 +174,12 @@
   const updatePageUrl = () => {
     setTimeout(() => {
       if (trackingData.page_url !== window.location.href) {
-        trackingData.page_url = window.location.href;
-        trackingData.scrollDepth = 0;
-        sendTrackingData("page_load", window.location.href);
+        sendTrackingData("exitIntentUnload", { message: "Page unload" });
+        setTimeout(() => {
+          trackingData.page_url = window.location.href;
+          trackingData.scrollDepth = 0;
+          sendTrackingData("page_load", window.location.href);
+        }, 50);
       }
     }, 50);
   };
@@ -178,16 +189,16 @@
       document.documentElement.scrollHeight - window.innerHeight;
     const scrollPercentage = (scrollTop / docHeight) * 100;
     trackingData.scrollDepth = scrollPercentage;
-  }
+  };
 
   // Initialize tracking
   const initializeTracking = () => {
     window.addEventListener("load", handlePageLoad);
     window.addEventListener("scroll", handleScroll);
     document.addEventListener("mouseleave", handleMouseLeave);
-    // window.addEventListener("beforeunload", () => {
-    //   sendTrackingData("exitIntentUnload", { message: "Page unload" });
-    // });
+    window.addEventListener("beforeunload", () => {
+      sendTrackingData("exitIntentUnload", { message: "Page unload" });
+    });
 
     // Monitor URL changes for SPAs
     const urlObserver = new MutationObserver(() => {
