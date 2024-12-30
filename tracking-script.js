@@ -6,12 +6,13 @@
 
   // Function to send data to the backend
   const sendTrackingData = async (type, data) => {
+    if (!data) return;
     // const payload = {
     //   type,
     //   data,
     //   timestamp: new Date().toISOString(),
     // };
-    console.log("data", data, trackingData);
+    console.log("data", data,type, trackingData);
     let payload = {};
     if (type === "scroll_depth") {
       payload = {
@@ -19,13 +20,12 @@
         page_url: trackingData.page_url,
         type: "scroll_depth",
       };
-    } else if (type === "page_url") {
+    } else
       payload = {
-        page_url: data,
+        page_url: data?.page_url,
         type: "page_url",
         scroll_depth: trackingData.scrollDepth,
       };
-    }
     try {
       await fetch("https://be-agent.dev-vison.infiniticube.in/analytics/data", {
         method: "POST",
