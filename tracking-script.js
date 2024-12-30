@@ -33,9 +33,9 @@
 
   const sendTrackingData = (type, data) => {
     console.log(`Tracking ${type}:`, trackingData);
+    console.log("Type")
     trackingBuffer.push({ type, data, timestamp: new Date() });
     if (trackingBuffer.length >= 10) {
-      // Adjust batching threshold
       flushTrackingData();
     }
   };
