@@ -57,6 +57,7 @@
 
     if (scrollPercentage > lastScrollDepth) {
       lastScrollDepth = scrollPercentage;
+      trackingData.scrollDepth = scrollPercentage;
       sendTrackingData("scroll_depth", scrollPercentage.toFixed(2));
     }
   }, 500); // 500ms debounce delay
@@ -69,9 +70,9 @@
   // Handle exit intent
   const handleMouseLeave = (e) => {
     if (e.clientY < 10) {
-      // sendTrackingData("exitIntent", {
-      //   message: "User is about to leave the page",
-      // });
+      sendTrackingData("exitIntent", {
+        message: "User is about to leave the page",
+      });
     }
   };
 
@@ -90,9 +91,9 @@
     window.addEventListener("load", handlePageLoad);
     window.addEventListener("scroll", handleScroll);
     document.addEventListener("mouseleave", handleMouseLeave);
-    // window.addEventListener("beforeunload", () => {
-    //   sendTrackingData("exitIntent", { message: "Page unload" });
-    // });
+    window.addEventListener("beforeunload", () => {
+      sendTrackingData("exitIntent", { message: "Page unload" });
+    });
 
     // Monitor URL changes for SPAs
     const urlObserver = new MutationObserver(() => {
