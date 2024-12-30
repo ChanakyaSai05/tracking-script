@@ -103,7 +103,7 @@
       }
     } else {
       payload = {
-        scroll_depth: 0,
+        scroll_depth: trackingData?.scrollDepth?.toFixed(2) || 0,
         page_url:
           data?.page_url || trackingData?.page_url || window.location.href,
         type: "page_load",
@@ -172,6 +172,13 @@
       }
     }, 50);
   };
+  const updateScrollDepth = () => {
+    const scrollTop = window.scrollY;
+    const docHeight =
+      document.documentElement.scrollHeight - window.innerHeight;
+    const scrollPercentage = (scrollTop / docHeight) * 100;
+    trackingData.scrollDepth = scrollPercentage;
+  }
 
   // Initialize tracking
   const initializeTracking = () => {
@@ -184,6 +191,7 @@
 
     // Monitor URL changes for SPAs
     const urlObserver = new MutationObserver(() => {
+      updateScrollDepth();
       updatePageUrl();
     });
 
