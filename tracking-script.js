@@ -1,4 +1,3 @@
-
 (function () {
   const trackingData = {
     scrollDepth: 0,
@@ -13,13 +12,27 @@
     //   timestamp: new Date().toISOString(),
     // };
     console.log("data", data, trackingData);
+    let payload = {};
+    if (type === "scroll_depth") {
+      payload = {
+        scroll_depth: data,
+        page_url: trackingData.page_url,
+        type: "scroll_depth",
+      };
+    } else if (type === "page_url") {
+      payload = {
+        page_url: data,
+        type: "page_url",
+        scroll_depth: trackingData.scrollDepth,
+      };
+    }
     try {
       await fetch("https://be-agent.dev-vison.infiniticube.in/analytics/data", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(trackingData),
+        body: JSON.stringify(payload),
       });
-      console.log("Tracking data sent:", trackingData);
+      console.log("Tracking data sent:", payload);
     } catch (error) {
       console.error("Error sending tracking data:", error);
     }
