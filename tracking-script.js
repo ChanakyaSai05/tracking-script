@@ -87,9 +87,9 @@
     //     script_id: trackingId,
     //     session_id: sessionId,
     //   };
-    // } else 
-    if(type==="exitIntent"){
-      if(trackingData.scrollDepth>exitIntentScrollPercentage){
+    // } else
+    if (type === "exitIntent") {
+      if (trackingData.scrollDepth > exitIntentScrollPercentage) {
         exitIntentScrollPercentage = trackingData.scrollDepth;
         payload = {
           scroll_depth: trackingData?.scrollDepth?.toFixed(2) || 0,
@@ -98,12 +98,12 @@
           script_id: trackingId,
           session_id: sessionId,
         };
-      }else{
+      } else {
         return;
       }
-    }else{
+    } else {
       payload = {
-        scroll_depth: trackingData?.scrollDepth?.toFixed(2) || 0,
+        scroll_depth: 0,
         page_url:
           data?.page_url || trackingData?.page_url || window.location.href,
         type: "page_load",
