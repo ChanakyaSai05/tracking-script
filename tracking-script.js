@@ -3,7 +3,7 @@
     scrollDepth: 0,
     page_url: window.location.href,
   };
-
+  // Function to extract query parameters from the script URL
   const getScriptParam = (param) => {
     const scriptTags = document.getElementsByTagName("script");
     for (let script of scriptTags) {
@@ -15,6 +15,7 @@
     return null;
   };
 
+  // Extract the ID parameter
   const trackingId = getScriptParam("id");
   if (!trackingId) {
     console.error("Tracking ID is missing in the script URL");
@@ -28,9 +29,11 @@
     });
   }
 
+  // Set session ID with expiration
   function setSessionIdWithExpiry(sessionId) {
     const now = new Date();
-    const expiryTime = now.getTime() + 24 * 60 * 60 * 1000;
+    // const expiryTime = now.getTime() + 24 * 60 * 60 * 1000; // 1 day in milliseconds
+    const expiryTime = now.getTime() + 1 * 60 * 1000; // 1 minute in milliseconds for testing
     const sessionData = {
       sessionId,
       expiry: expiryTime,
@@ -38,6 +41,7 @@
     localStorage.setItem("tracking_session", JSON.stringify(sessionData));
   }
 
+  // Get session ID and validate expiry
   function getSessionId() {
     const sessionData = localStorage.getItem("tracking_session");
     if (!sessionData) {
@@ -50,6 +54,7 @@
       const parsedData = JSON.parse(sessionData);
       const now = new Date();
 
+      // Check if the session has expired
       if (now.getTime() > parsedData.expiry) {
         const newSessionId = generateSessionId();
         setSessionIdWithExpiry(newSessionId);
@@ -64,18 +69,48 @@
       return newSessionId;
     }
   }
+  let exitIntentScrollPercentage = 0;
 
+  // Function to send data to the backend
   const sendTrackingData = async (type, data) => {
     if (!data) return;
-    try {
-      const sessionId = getSessionId();
-      const payload = {
-        ...data,
+    // Get session ID
+    const sessionId = getSessionId();
+    //
+    console.log("data", data, type, trackingData);
+    let payload = {};
+    // if (type === "scroll_depth") {
+    //   payload = {
+    //     scroll_depth: data || trackingData?.scrollDepth || 0,
+    //     page_url: trackingData?.page_url || window.location.href,
+    //     type: "scroll_depth",
+    //     script_id: trackingId,
+    //     session_id: sessionId,
+    //   };
+    // } else 
+    if(type==="exitIntent"){
+      if(trackingData.scrollDepth>exitIntentScrollPercentage){
+        exitIntentScrollPercentage = trackingData.scrollDepth;
+        payload = {
+          scroll_depth: trackingData?.scrollDepth || 0,
+          page_url: trackingData?.page_url || window.location.href,
+          type: "page_url",
+          script_id: trackingId,
+          session_id: sessionId,
+        };
+      }
+    }else{
+      payload = {
+        scroll_depth: trackingData?.scrollDepth || 0,
+        page_url:
+          data?.page_url || trackingData?.page_url || window.location.href,
+        type: "page_load",
         script_id: trackingId,
         session_id: sessionId,
       };
-      console.log("Tracking data:", payload);
-
+    }
+    console.log("payload", payload);
+    try {
       await fetch("https://be-agent.dev-vison.infiniticube.in/analytics/data", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -87,6 +122,7 @@
     }
   };
 
+  // Debounce function
   const debounce = (func, delay) => {
     let timeout;
     return function (...args) {
@@ -95,6 +131,7 @@
     };
   };
 
+  // Handle scroll with debounce
   let lastScrollDepth = 0;
   const handleScroll = debounce(() => {
     const scrollTop = window.scrollY;
@@ -104,30 +141,53 @@
 
     if (scrollPercentage > lastScrollDepth) {
       lastScrollDepth = scrollPercentage;
-      trackingData.scrollDepth = scrollPercentage.toFixed(2);
+      trackingData.scrollDepth = scrollPercentage;
+      // sendTrackingData("scroll_depth", scrollPercentage.toFixed(2));
     }
-  }, 500);
+  }, 500); // 500ms debounce delay
 
+  // Send data when the page loads
+  const handlePageLoad = () => {
+    sendTrackingData("pageLoad", { page_url: trackingData.page_url });
+  };
+
+  // Handle exit intent
   const handleMouseLeave = (e) => {
     if (e.clientY < 10) {
       sendTrackingData("exitIntent", {
-        page_url: trackingData.page_url,
-        scroll_depth: trackingData.scrollDepth,
+        message: "User is about to leave the page",
       });
     }
   };
 
-  const handlePageUnload = () => {
-    sendTrackingData("pageUnload", {
-      page_url: trackingData.page_url,
-      scroll_depth: trackingData.scrollDepth,
-    });
+  // Handle URL updates (SPAs or dynamic routing)
+  const updatePageUrl = () => {
+    setTimeout(() => {
+      if (trackingData.page_url !== window.location.href) {
+        trackingData.page_url = window.location.href;
+        sendTrackingData("page_url", window.location.href);
+      }
+    }, 50);
   };
 
+  // Initialize tracking
   const initializeTracking = () => {
+    window.addEventListener("load", handlePageLoad);
     window.addEventListener("scroll", handleScroll);
     document.addEventListener("mouseleave", handleMouseLeave);
-    window.addEventListener("beforeunload", handlePageUnload);
+    window.addEventListener("beforeunload", () => {
+      sendTrackingData("exitIntent", { message: "Page unload" });
+    });
+
+    // Monitor URL changes for SPAs
+    const urlObserver = new MutationObserver(() => {
+      updatePageUrl();
+    });
+
+    urlObserver.observe(document.querySelector("body"), {
+      childList: true,
+      subtree: true,
+    });
   };
 
   initializeTracking();
