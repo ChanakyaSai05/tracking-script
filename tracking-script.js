@@ -87,9 +87,9 @@
     //     script_id: trackingId,
     //     session_id: sessionId,
     //   };
-    // } else
-    if (type === "exitIntent") {
-      if (trackingData.scrollDepth > exitIntentScrollPercentage) {
+    // } else 
+    if(type==="exitIntent"){
+      if(trackingData.scrollDepth>exitIntentScrollPercentage){
         exitIntentScrollPercentage = trackingData.scrollDepth;
         payload = {
           scroll_depth: trackingData?.scrollDepth?.toFixed(2) || 0,
@@ -98,18 +98,10 @@
           script_id: trackingId,
           session_id: sessionId,
         };
-      } else {
+      }else{
         return;
       }
-    } else if (type === "exitIntentUnload") {
-      payload = {
-        scroll_depth: trackingData?.scrollDepth?.toFixed(2) || 0,
-        page_url: trackingData?.page_url,
-        type: "page_url",
-        script_id: trackingId,
-        session_id: sessionId,
-      };
-    } else {
+    }else{
       payload = {
         scroll_depth: trackingData?.scrollDepth?.toFixed(2) || 0,
         page_url:
@@ -174,21 +166,10 @@
   const updatePageUrl = () => {
     setTimeout(() => {
       if (trackingData.page_url !== window.location.href) {
-        sendTrackingData("exitIntentUnload", { message: "Page unload" });
-        setTimeout(() => {
-          trackingData.page_url = window.location.href;
-          trackingData.scrollDepth = 0;
-          sendTrackingData("page_load", window.location.href);
-        }, 50);
+        trackingData.page_url = window.location.href;
+        sendTrackingData("page_url", window.location.href);
       }
     }, 50);
-  };
-  const updateScrollDepth = () => {
-    const scrollTop = window.scrollY;
-    const docHeight =
-      document.documentElement.scrollHeight - window.innerHeight;
-    const scrollPercentage = (scrollTop / docHeight) * 100;
-    trackingData.scrollDepth = scrollPercentage;
   };
 
   // Initialize tracking
@@ -196,13 +177,12 @@
     window.addEventListener("load", handlePageLoad);
     window.addEventListener("scroll", handleScroll);
     document.addEventListener("mouseleave", handleMouseLeave);
-    window.addEventListener("beforeunload", () => {
-      sendTrackingData("exitIntentUnload", { message: "Page unload" });
-    });
+    // window.addEventListener("beforeunload", () => {
+    //   sendTrackingData("exitIntentUnload", { message: "Page unload" });
+    // });
 
     // Monitor URL changes for SPAs
     const urlObserver = new MutationObserver(() => {
-      updateScrollDepth();
       updatePageUrl();
     });
 
