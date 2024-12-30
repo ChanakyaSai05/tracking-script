@@ -92,16 +92,26 @@
       if(trackingData.scrollDepth>exitIntentScrollPercentage){
         exitIntentScrollPercentage = trackingData.scrollDepth;
         payload = {
-          scroll_depth: trackingData?.scrollDepth || 0,
+          scroll_depth: trackingData?.scrollDepth?.toFixed(2) || 0,
           page_url: trackingData?.page_url || window.location.href,
           type: "page_url",
           script_id: trackingId,
           session_id: sessionId,
         };
+      }else{
+        return;
       }
+    }else if(type==="exitIntentUnload"){
+      payload = {
+        scroll_depth: trackingData?.scrollDepth?.toFixed(2) || 0,
+        page_url: trackingData?.page_url || window.location.href,
+        type: "page_url",
+        script_id: trackingId,
+        session_id: sessionId,
+      };
     }else{
       payload = {
-        scroll_depth: trackingData?.scrollDepth || 0,
+        scroll_depth: trackingData?.scrollDepth?.toFixed(2) || 0,
         page_url:
           data?.page_url || trackingData?.page_url || window.location.href,
         type: "page_load",
@@ -176,7 +186,7 @@
     window.addEventListener("scroll", handleScroll);
     document.addEventListener("mouseleave", handleMouseLeave);
     window.addEventListener("beforeunload", () => {
-      sendTrackingData("exitIntent", { message: "Page unload" });
+      sendTrackingData("exitIntentUnload", { message: "Page unload" });
     });
 
     // Monitor URL changes for SPAs
