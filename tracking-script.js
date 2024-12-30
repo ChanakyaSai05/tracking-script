@@ -3,7 +3,7 @@
     scrollDepth: 0,
     page_url: window.location.href,
   };
-  // Function to extract query parameters from the script URL
+
   const getScriptParam = (param) => {
     const scriptTags = document.getElementsByTagName("script");
     for (let script of scriptTags) {
@@ -15,7 +15,6 @@
     return null;
   };
 
-  // Extract the ID parameter
   const trackingId = getScriptParam("id");
   if (!trackingId) {
     console.error("Tracking ID is missing in the script URL");
@@ -29,71 +28,54 @@
     });
   }
 
-  function setCookie(name, value, days) {
-    try {
-      const expirationDate = new Date();
-      expirationDate.setDate(expirationDate.getDate() + days);
-      const cookie = `${name}=${encodeURIComponent(
-        value
-      )};expires=${expirationDate.toUTCString()};path=/;SameSite=Strict;Secure`;
-      document.cookie = cookie;
-      return true;
-    } catch (error) {
-      console.error("Error setting cookie:", error);
-      return false;
-    }
+  function setSessionIdWithExpiry(sessionId) {
+    const now = new Date();
+    const expiryTime = now.getTime() + 24 * 60 * 60 * 1000;
+    const sessionData = {
+      sessionId,
+      expiry: expiryTime,
+    };
+    localStorage.setItem("tracking_session", JSON.stringify(sessionData));
   }
 
-  function getCookie(name) {
+  function getSessionId() {
+    const sessionData = localStorage.getItem("tracking_session");
+    if (!sessionData) {
+      const newSessionId = generateSessionId();
+      setSessionIdWithExpiry(newSessionId);
+      return newSessionId;
+    }
+
     try {
-      const cookies = document.cookie.split(";");
-      for (let cookie of cookies) {
-        const [cookieName, cookieValue] = cookie.trim().split("=");
-        if (cookieName.trim() === name) {
-          return cookieValue ? decodeURIComponent(cookieValue) : null;
-        }
+      const parsedData = JSON.parse(sessionData);
+      const now = new Date();
+
+      if (now.getTime() > parsedData.expiry) {
+        const newSessionId = generateSessionId();
+        setSessionIdWithExpiry(newSessionId);
+        return newSessionId;
       }
-      return null;
+
+      return parsedData.sessionId;
     } catch (error) {
-      console.error("Error getting cookie:", error);
-      return null;
+      console.error("Error parsing session data:", error);
+      const newSessionId = generateSessionId();
+      setSessionIdWithExpiry(newSessionId);
+      return newSessionId;
     }
   }
 
-  // Function to send data to the backend
   const sendTrackingData = async (type, data) => {
     if (!data) return;
-    // In your tracking code:
-    let sessionId = getCookie("tracking_session_id");
-
-    if (!sessionId) {
-      sessionId = generateSessionId();
-      const cookieSet = setCookie("tracking_session_id", sessionId, 1);
-      if (!cookieSet) {
-        console.error("Failed to set session cookie");
-      }
-    }
-    console.log("data", data, type, trackingData);
-    let payload = {};
-    if (type === "scroll_depth") {
-      payload = {
-        scroll_depth: data || trackingData?.scrollDepth || 0,
-        page_url: trackingData?.page_url || window.location.href,
-        type: "scroll_depth",
-        script_id: trackingId,
-        session_id: sessionId || null,
-      };
-    } else
-      payload = {
-        scroll_depth: trackingData?.scrollDepth || 0,
-        page_url:
-          data?.page_url || trackingData?.page_url || window.location.href,
-        type: "page_load",
-        script_id: trackingId,
-        session_id: sessionId || null,
-      };
-    console.log("payload", payload);
     try {
+      const sessionId = getSessionId();
+      const payload = {
+        ...data,
+        script_id: trackingId,
+        session_id: sessionId,
+      };
+      console.log("Tracking data:", payload);
+
       await fetch("https://be-agent.dev-vison.infiniticube.in/analytics/data", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -105,7 +87,6 @@
     }
   };
 
-  // Debounce function
   const debounce = (func, delay) => {
     let timeout;
     return function (...args) {
@@ -114,7 +95,6 @@
     };
   };
 
-  // Handle scroll with debounce
   let lastScrollDepth = 0;
   const handleScroll = debounce(() => {
     const scrollTop = window.scrollY;
@@ -125,52 +105,29 @@
     if (scrollPercentage > lastScrollDepth) {
       lastScrollDepth = scrollPercentage;
       trackingData.scrollDepth = scrollPercentage.toFixed(2);
-      sendTrackingData("scroll_depth", scrollPercentage.toFixed(2));
     }
-  }, 500); // 500ms debounce delay
+  }, 500);
 
-  // Send data when the page loads
-  const handlePageLoad = () => {
-    sendTrackingData("pageLoad", { page_url: trackingData.page_url });
-  };
-
-  // Handle exit intent
   const handleMouseLeave = (e) => {
     if (e.clientY < 10) {
       sendTrackingData("exitIntent", {
-        message: "User is about to leave the page",
+        page_url: trackingData.page_url,
+        scroll_depth: trackingData.scrollDepth,
       });
     }
   };
 
-  // Handle URL updates (SPAs or dynamic routing)
-  const updatePageUrl = () => {
-    setTimeout(() => {
-      if (trackingData.page_url !== window.location.href) {
-        trackingData.page_url = window.location.href;
-        sendTrackingData("page_url", window.location.href);
-      }
-    }, 50);
+  const handlePageUnload = () => {
+    sendTrackingData("pageUnload", {
+      page_url: trackingData.page_url,
+      scroll_depth: trackingData.scrollDepth,
+    });
   };
 
-  // Initialize tracking
   const initializeTracking = () => {
-    window.addEventListener("load", handlePageLoad);
     window.addEventListener("scroll", handleScroll);
-    // document.addEventListener("mouseleave", handleMouseLeave);
-    // window.addEventListener("beforeunload", () => {
-    //   sendTrackingData("exitIntent", { message: "Page unload" });
-    // });
-
-    // Monitor URL changes for SPAs
-    const urlObserver = new MutationObserver(() => {
-      updatePageUrl();
-    });
-
-    urlObserver.observe(document.querySelector("body"), {
-      childList: true,
-      subtree: true,
-    });
+    document.addEventListener("mouseleave", handleMouseLeave);
+    window.addEventListener("beforeunload", handlePageUnload);
   };
 
   initializeTracking();
