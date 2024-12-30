@@ -16,15 +16,15 @@
     let payload = {};
     if (type === "scroll_depth") {
       payload = {
-        scroll_depth: data,
-        page_url: trackingData.page_url,
+        scroll_depth: data || trackingData?.scrollDepth || 0,
+        page_url: trackingData?.page_url || window.location.href,
         type: "scroll_depth",
       };
     } else
       payload = {
-        page_url: data?.page_url,
+        page_url: data?.page_url || trackingData?.page_url || window.location.href,
         type: "page_url",
-        scroll_depth: trackingData.scrollDepth,
+        scroll_depth: trackingData?.scrollDepth || 0,
       };
     try {
       await fetch("https://be-agent.dev-vison.infiniticube.in/analytics/data", {
