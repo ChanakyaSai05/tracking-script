@@ -69,9 +69,9 @@
   // Handle exit intent
   const handleMouseLeave = (e) => {
     if (e.clientY < 10) {
-      sendTrackingData("exitIntent", {
-        message: "User is about to leave the page",
-      });
+      // sendTrackingData("exitIntent", {
+      //   message: "User is about to leave the page",
+      // });
     }
   };
 
