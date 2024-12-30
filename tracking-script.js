@@ -26,6 +26,7 @@
         type: "page_url",
         scroll_depth: trackingData?.scrollDepth || 0,
       };
+    console.log("payload", payload);
     try {
       await fetch("https://be-agent.dev-vison.infiniticube.in/analytics/data", {
         method: "POST",
