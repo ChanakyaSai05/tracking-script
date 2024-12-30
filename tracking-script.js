@@ -1,45 +1,58 @@
 (function () {
   const trackingData = {
-    scroll_depth: 0,
+    scrollDepth: 0,
     page_url: window.location.href,
   };
 
-  let isScrolling = false;
-  let trackingBuffer = [];
+  // Function to send data to the backend
+  const sendTrackingData = async (type, data) => {
+    // const payload = {
+    //   type,
+    //   data,
+    //   timestamp: new Date().toISOString(),
+    // };
+    console.log("data", data);
+    try {
+      await fetch("https://be-agent.dev-vison.infiniticube.in/analytics/data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      console.log("Tracking data sent:", payload);
+    } catch (error) {
+      console.error("Error sending tracking data:", error);
+    }
+  };
 
+  // Debounce function
   const debounce = (func, delay) => {
-    let timer;
-    return (...args) => {
-      clearTimeout(timer);
-      timer = setTimeout(() => func.apply(this, args), delay);
+    let timeout;
+    return function (...args) {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(this, args), delay);
     };
   };
 
-  const flushTrackingData = () => {
-    if (trackingBuffer.length > 0) {
-      navigator.sendBeacon("https://be-agent.dev-vison.infiniticube.in/analytics/data", JSON.stringify(trackingBuffer));
-      trackingBuffer = [];
-    }
-  };
-
-  const sendTrackingData = (type, data) => {
-    trackingBuffer.push({ type, data, timestamp: new Date() });
-    if (trackingBuffer.length >= 10) {
-      flushTrackingData();
-    }
-  };
-
+  // Handle scroll with debounce
+  let lastScrollDepth = 0;
   const handleScroll = debounce(() => {
     const scrollTop = window.scrollY;
-    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const docHeight =
+      document.documentElement.scrollHeight - window.innerHeight;
     const scrollPercentage = (scrollTop / docHeight) * 100;
 
-    if (scrollPercentage > trackingData.scroll_depth) {
-      trackingData.scroll_depth = scrollPercentage;
-      sendTrackingData("scroll_depth", scrollPercentage);
+    if (scrollPercentage > lastScrollDepth) {
+      lastScrollDepth = scrollPercentage;
+      sendTrackingData("scroll_depth", scrollPercentage.toFixed(2));
     }
-  }, 1000);
+  }, 500); // 500ms debounce delay
 
+  // Send data when the page loads
+  const handlePageLoad = () => {
+    sendTrackingData("pageLoad", { page_url: trackingData.page_url });
+  };
+
+  // Handle exit intent
   const handleMouseLeave = (e) => {
     if (e.clientY < 10) {
       sendTrackingData("exitIntent", {
@@ -48,6 +61,7 @@
     }
   };
 
+  // Handle URL updates (SPAs or dynamic routing)
   const updatePageUrl = () => {
     setTimeout(() => {
       if (trackingData.page_url !== window.location.href) {
@@ -57,24 +71,16 @@
     }, 50);
   };
 
+  // Initialize tracking
   const initializeTracking = () => {
-    window.addEventListener("load", () => {
-      sendTrackingData("pageLoad", { page_url: trackingData.page_url });
-    });
-
-    window.addEventListener("scroll", () => {
-      isScrolling = true;
-      handleScroll();
-    });
-
+    window.addEventListener("load", handlePageLoad);
+    window.addEventListener("scroll", handleScroll);
     document.addEventListener("mouseleave", handleMouseLeave);
-    window.addEventListener("beforeunload", flushTrackingData);
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "hidden") {
-        flushTrackingData();
-      }
+    window.addEventListener("beforeunload", () => {
+      sendTrackingData("exitIntent", { message: "Page unload" });
     });
 
+    // Monitor URL changes for SPAs
     const urlObserver = new MutationObserver(() => {
       updatePageUrl();
     });
