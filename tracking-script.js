@@ -90,9 +90,9 @@
     window.addEventListener("load", handlePageLoad);
     window.addEventListener("scroll", handleScroll);
     document.addEventListener("mouseleave", handleMouseLeave);
-    window.addEventListener("beforeunload", () => {
-      sendTrackingData("exitIntent", { message: "Page unload" });
-    });
+    // window.addEventListener("beforeunload", () => {
+    //   sendTrackingData("exitIntent", { message: "Page unload" });
+    // });
 
     // Monitor URL changes for SPAs
     const urlObserver = new MutationObserver(() => {
