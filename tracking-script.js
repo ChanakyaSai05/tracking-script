@@ -165,8 +165,12 @@
   const updatePageUrl = () => {
     setTimeout(() => {
       if (trackingData.page_url !== window.location.href) {
-        trackingData.page_url = window.location.href;
-        sendTrackingData("page_url", window.location.href);
+        sendTrackingData("exitIntentUnload", { message: "Page unload" });
+        setTimeout(() => {
+          trackingData.page_url = window.location.href;
+          trackingData.scrollDepth = 0;
+          sendTrackingData("page_load", window.location.href);
+        }, 50);
       }
     }, 50);
   };
