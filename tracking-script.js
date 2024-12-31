@@ -32,8 +32,8 @@
   // Set session ID with expiration
   function setSessionIdWithExpiry(sessionId) {
     const now = new Date();
-    // const expiryTime = now.getTime() + 24 * 60 * 60 * 1000; // 1 day in milliseconds
-    const expiryTime = now.getTime() + 1 * 60 * 1000; // 1 minute in milliseconds for testing
+    const expiryTime = now.getTime() + 24 * 60 * 60 * 1000; // 1 day in milliseconds
+    // const expiryTime = now.getTime() + 1 * 60 * 1000; // 1 minute in milliseconds for testing
     const sessionData = {
       sessionId,
       expiry: expiryTime,
@@ -79,17 +79,8 @@
     //
     console.log("data", data, type, trackingData);
     let payload = {};
-    // if (type === "scroll_depth") {
-    //   payload = {
-    //     scroll_depth: data || trackingData?.scrollDepth || 0,
-    //     page_url: trackingData?.page_url || window.location.href,
-    //     type: "scroll_depth",
-    //     script_id: trackingId,
-    //     session_id: sessionId,
-    //   };
-    // } else 
-    if(type==="exitIntent"){
-      if(trackingData.scrollDepth>exitIntentScrollPercentage){
+    if (type === "exitIntent") {
+      if (trackingData.scrollDepth > exitIntentScrollPercentage) {
         exitIntentScrollPercentage = trackingData.scrollDepth;
         payload = {
           scroll_depth: trackingData?.scrollDepth?.toFixed(2) || 0,
@@ -98,10 +89,18 @@
           script_id: trackingId,
           session_id: sessionId,
         };
-      }else{
+      } else {
         return;
       }
-    }else{
+    } else if (type === "exitIntentUnload") {
+      payload = {
+        scroll_depth: trackingData?.scrollDepth?.toFixed(2) || 0,
+        page_url: trackingData?.page_url,
+        type: "page_url",
+        script_id: trackingId,
+        session_id: sessionId,
+      };
+    } else {
       payload = {
         scroll_depth: trackingData?.scrollDepth?.toFixed(2) || 0,
         page_url:
@@ -177,9 +176,9 @@
     window.addEventListener("load", handlePageLoad);
     window.addEventListener("scroll", handleScroll);
     document.addEventListener("mouseleave", handleMouseLeave);
-    // window.addEventListener("beforeunload", () => {
-    //   sendTrackingData("exitIntentUnload", { message: "Page unload" });
-    // });
+    window.addEventListener("beforeunload", () => {
+      sendTrackingData("exitIntentUnload", { message: "Page unload" });
+    });
 
     // Monitor URL changes for SPAs
     const urlObserver = new MutationObserver(() => {
