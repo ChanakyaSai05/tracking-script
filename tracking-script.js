@@ -70,6 +70,18 @@
     }
   }
   let exitIntentScrollPercentage = 0;
+  let previousCalledPayload = {};
+  const checkPreviousPayload = (payload) => {
+    if (
+      payload.page_url === previousCalledPayload.page_url &&
+      payload.scroll_depth === previousCalledPayload.scroll_depth &&
+      payload.type === previousCalledPayload.type
+    ) {
+      return true;
+    }
+    previousCalledPayload = payload;
+    return false;
+  };
 
   // Function to send data to the backend
   const sendTrackingData = async (type, data) => {
@@ -111,6 +123,7 @@
       };
     }
     console.log("payload", payload);
+    if (checkPreviousPayload(payload)) return;
     try {
       await fetch("https://be-agent.dev-vison.infiniticube.in/analytics/data", {
         method: "POST",
