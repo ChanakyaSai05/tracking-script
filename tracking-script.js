@@ -74,7 +74,8 @@
   const checkPreviousPayload = (payload) => {
     if (
       payload.page_url === previousCalledPayload.page_url &&
-      payload.scroll_depth === previousCalledPayload.scroll_depth
+      payload.scroll_depth === previousCalledPayload.scroll_depth &&
+      payload.type === previousCalledPayload.type
     ) {
       return true;
     }
@@ -128,6 +129,7 @@
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
+        keepalive: true,
       });
       console.log("Tracking data sent:", payload);
     } catch (error) {
@@ -207,32 +209,26 @@
     window.addEventListener("load", handlePageLoad);
     window.addEventListener("scroll", handleScroll);
     document.addEventListener("mouseleave", handleMouseLeave);
-    // window.addEventListener("beforeunload", () => {
-    //   sendTrackingData("exitIntentUnload", { message: "Page unload" });
-    // });
     window.addEventListener("beforeunload", () => {
-      const payload = {
-        scroll_depth: trackingData?.scrollDepth?.toFixed(2) || 0,
-        page_url: trackingData?.page_url || window.location.href,
-        type: "page_unload",
-        script_id: trackingId,
-        session_id: getSessionId(),
-        message: "Page unload",
-      };
-    
-      navigator.sendBeacon ? 
-        navigator.sendBeacon(
-          "https://be-agent.dev-vison.infiniticube.in/analytics/data",
-          new Blob([JSON.stringify(payload)], { type: "application/json" })
-        ): 
-        fetch("https://be-agent.dev-vison.infiniticube.in/analytics/data", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-          keepalive: true, // Ensures the request completes during unload
-        });
+      sendTrackingData("exitIntentUnload", { message: "Page unload" });
     });
+    // window.addEventListener("beforeunload", () => {
+    //   if (!isSPARouting) {
+    //     const payload = {
+    //       scroll_depth: trackingData?.scrollDepth?.toFixed(2) || 0,
+    //       page_url: trackingData?.page_url,
+    //       type: "page_url",
+    //       script_id: trackingId,
+    //       session_id: getSessionId(),
+    //     };
     
+    //     const blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
+    //     navigator.sendBeacon(
+    //       "https://be-agent.dev-vison.infiniticube.in/analytics/data",
+    //       blob
+    //     );
+    //   }
+    // });
 
     // Monitor URL changes for SPAs
     const urlObserver = new MutationObserver(() => {
