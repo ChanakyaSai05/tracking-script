@@ -174,10 +174,25 @@
     }
   };
 
-  // Handle URL updates (SPAs or dynamic routing)
+  // // Handle URL updates (SPAs or dynamic routing)
+  // const updatePageUrl = () => {
+  //   setTimeout(() => {
+  //     if (trackingData.page_url !== window.location.href) {
+  //       sendTrackingData("exitIntentUnload", { message: "Page unload" });
+  //       setTimeout(() => {
+  //         trackingData.page_url = window.location.href;
+  //         trackingData.scrollDepth = 0;
+  //         sendTrackingData("page_load", window.location.href);
+  //       }, 50);
+  //     }
+  //   }, 50);
+  // };
+  let isSPARouting = false;
+
   const updatePageUrl = () => {
     setTimeout(() => {
       if (trackingData.page_url !== window.location.href) {
+        isSPARouting = true;
         sendTrackingData("exitIntentUnload", { message: "Page unload" });
         setTimeout(() => {
           trackingData.page_url = window.location.href;
@@ -193,8 +208,25 @@
     window.addEventListener("load", handlePageLoad);
     window.addEventListener("scroll", handleScroll);
     document.addEventListener("mouseleave", handleMouseLeave);
+    // window.addEventListener("beforeunload", () => {
+    //   sendTrackingData("exitIntentUnload", { message: "Page unload" });
+    // });
     window.addEventListener("beforeunload", () => {
-      sendTrackingData("exitIntentUnload", { message: "Page unload" });
+      if (!isSPARouting) {
+        const payload = {
+          scroll_depth: trackingData?.scrollDepth?.toFixed(2) || 0,
+          page_url: trackingData?.page_url,
+          type: "page_url",
+          script_id: trackingId,
+          session_id: getSessionId(),
+        };
+    
+        const blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
+        navigator.sendBeacon(
+          "https://be-agent.dev-vison.infiniticube.in/analytics/data",
+          blob
+        );
+      }
     });
 
     // Monitor URL changes for SPAs
