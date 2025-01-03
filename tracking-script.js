@@ -2,6 +2,7 @@
   const trackingData = {
     scrollDepth: 0,
     page_url: window.location.href,
+    referrer: document.referrer, // Track the referrer
   };
   // Function to extract query parameters from the script URL
   const getScriptParam = (param) => {
@@ -100,6 +101,7 @@
           type: "page_url",
           script_id: trackingId,
           session_id: sessionId,
+          referrer: trackingData?.referrer,
         };
       } else {
         return;
@@ -111,6 +113,7 @@
         type: "page_url",
         script_id: trackingId,
         session_id: sessionId,
+        referrer: trackingData?.referrer
       };
     } else {
       payload = {
@@ -120,6 +123,7 @@
         type: "page_load",
         script_id: trackingId,
         session_id: sessionId,
+        referrer: trackingData?.referrer,
       };
     }
     console.log("payload", payload);
@@ -163,7 +167,11 @@
 
   // Send data when the page loads
   const handlePageLoad = () => {
-    sendTrackingData("pageLoad", { page_url: trackingData.page_url });
+    console.log(`User landed from: ${trackingData.referrer}`);
+    trackingData.referrer = document.referrer;
+    setTimeout(() => {
+      sendTrackingData("pageLoad", { page_url: trackingData.page_url });
+    }, 50);
   };
 
   // Handle exit intent
